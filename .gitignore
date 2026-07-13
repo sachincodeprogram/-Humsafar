@@ -5,6 +5,7 @@ node_modules/
 .env
 backend/firebase-service-account.json
 **/google-services.json
+render-env.txt
 
 # Build outputs
 **/android/app/build/
