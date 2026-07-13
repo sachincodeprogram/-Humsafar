@@ -10,26 +10,32 @@ let messaging = null;
 // 2. firebase-service-account.json file (local development)
 // Dono na ho to push gracefully band rehta hai.
 function initPush() {
-  let serviceAccount = null;
+  // Push me koi bhi problem ho to server crash NAHI hona chahiye —
+  // push band rakh kar baaki app chalti rahe.
+  try {
+    let serviceAccount = null;
 
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-  } else {
-    const keyPath = path.resolve(
-      process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './firebase-service-account.json'
-    );
-    if (fs.existsSync(keyPath)) {
-      serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim());
+    } else {
+      const keyPath = path.resolve(
+        process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './firebase-service-account.json'
+      );
+      if (fs.existsSync(keyPath)) {
+        serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+      }
     }
-  }
 
-  if (!serviceAccount) {
-    console.log('Push notifications OFF (Firebase key nahi mili)');
-    return;
+    if (!serviceAccount) {
+      console.log('Push notifications OFF (Firebase key nahi mili)');
+      return;
+    }
+    const app = initializeApp({ credential: cert(serviceAccount) });
+    messaging = getMessaging(app);
+    console.log('Push notifications ON');
+  } catch (err) {
+    console.log('Push notifications OFF (Firebase key galat hai):', err.message);
   }
-  const app = initializeApp({ credential: cert(serviceAccount) });
-  messaging = getMessaging(app);
-  console.log('Push notifications ON');
 }
 
 // Fire-and-forget: push fail hone se call flow nahi rukna chahiye
