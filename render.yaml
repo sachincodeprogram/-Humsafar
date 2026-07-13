@@ -1,0 +1,23 @@
+# Render Blueprint — backend web service
+# Render dashboard me "New > Blueprint" se ye repo connect karo,
+# ya "New > Web Service" se manually banao (Root Directory: backend)
+services:
+  - type: web
+    name: humsafar-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: MONGO_URI
+        sync: false # MongoDB Atlas ka connection string yahan daalna
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AGORA_APP_ID
+        sync: false
+      - key: AGORA_APP_CERTIFICATE
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false # firebase-service-account.json ka poora content
