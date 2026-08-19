@@ -1,4 +1,4 @@
-package com.userapp
+package com.sachincodeprogram.humsafar.user
 
 import android.os.Bundle
 import android.view.WindowManager
