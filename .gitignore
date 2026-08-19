@@ -7,6 +7,12 @@ backend/firebase-service-account.json
 **/google-services.json
 render-env.txt
 
+# Release signing — YEH KABHI COMMIT MAT KARNA (Play Store upload keys)
+**/android/keystore.properties
+**/android/app/*-release.keystore
+**/android/app/*.jks
+release-signing-secrets*.txt
+
 # Build outputs
 **/android/app/build/
 **/android/build/

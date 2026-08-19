@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const Listener = require('../models/Listener');
+const User = require('../models/User');
 const Call = require('../models/Call');
 const { buildRtcToken } = require('../utils/agora');
 const { sendPush } = require('../utils/push');
@@ -79,20 +80,26 @@ function initSockets(io) {
         listener: id,
         channelName: `call_${requestId}`,
       });
-      await Listener.findByIdAndUpdate(id, { isBusy: true, $inc: { totalCalls: 1 } });
+      const listenerDoc = await Listener.findByIdAndUpdate(
+        id, { isBusy: true, $inc: { totalCalls: 1 } }, { new: true }
+      ).select('name');
+      const userDoc = await User.findById(pending.userId).select('name');
 
       const channelName = call.channelName;
-      const payloadFor = (uid) => ({
+      // otherId/otherName: dusre party ki basic info — report/block UI ke liye chahiye
+      const payloadFor = (uid, otherId, otherName) => ({
         callId: call._id.toString(),
         channelName,
         appId: process.env.AGORA_APP_ID,
         uid,
         token: buildRtcToken(channelName, uid),
+        otherId,
+        otherName,
       });
 
       const userSocket = userSockets.get(pending.userId);
-      if (userSocket) userSocket.emit('call:started', payloadFor(USER_UID));
-      socket.emit('call:started', payloadFor(LISTENER_UID));
+      if (userSocket) userSocket.emit('call:started', payloadFor(USER_UID, id, listenerDoc?.name));
+      socket.emit('call:started', payloadFor(LISTENER_UID, pending.userId, userDoc?.name));
     });
 
     socket.on('call:reject', ({ requestId }) => {
@@ -138,7 +145,15 @@ function initSockets(io) {
 // Called from REST when a user taps "Talk Now".
 // Returns { available: true, requestId } or { available: false }.
 async function requestCall(userId) {
-  const candidates = await Listener.find({ isOnline: true, isBusy: false, isActive: true });
+  const user = await User.findById(userId).select('blockedListeners');
+  const candidates = (
+    await Listener.find({
+      isOnline: true,
+      isBusy: false,
+      isActive: true,
+      _id: { $nin: user?.blockedListeners || [] },
+    })
+  ).filter((l) => !l.blockedUsers?.some((blockedId) => blockedId.toString() === userId));
   // Pehle live socket wala listener, warna push token wala (app band hogi to push se ring)
   const listener =
     candidates.find((l) => listenerSockets.has(l._id.toString())) ||

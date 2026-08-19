@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
 const ScheduledCall = require('../models/ScheduledCall');
+const Listener = require('../models/Listener');
 
 // POST /api/schedule — user creates callback or scheduled call
 // body: { type: 'callback' | 'scheduled', scheduledAt?, note? }
@@ -34,7 +35,11 @@ router.get('/mine', auth('user'), async (req, res) => {
 
 // GET /api/schedule/pending — listeners see the queue (callbacks first, then by time)
 router.get('/pending', auth('listener'), async (req, res) => {
-  const docs = await ScheduledCall.find({ status: { $in: ['pending', 'assigned'] } })
+  const listener = await Listener.findById(req.auth.id).select('blockedUsers');
+  const docs = await ScheduledCall.find({
+    status: { $in: ['pending', 'assigned'] },
+    user: { $nin: listener?.blockedUsers || [] },
+  })
     .sort({ type: 1, scheduledAt: 1, createdAt: 1 }) // 'callback' < 'scheduled' alphabetically
     .limit(100)
     .populate('user', 'name');

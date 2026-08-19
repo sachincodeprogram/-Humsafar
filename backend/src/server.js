@@ -9,6 +9,7 @@ const { initPush } = require('./utils/push');
 const authRoutes = require('./routes/auth.routes');
 const callRoutes = require('./routes/call.routes');
 const scheduleRoutes = require('./routes/schedule.routes');
+const reportRoutes = require('./routes/report.routes');
 const initSockets = require('./sockets');
 
 const app = express();
@@ -19,6 +20,7 @@ app.get('/', (req, res) => res.json({ ok: true, service: 'friendly-call-backend'
 app.use('/api/auth', authRoutes);
 app.use('/api/calls', callRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/report', reportRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });

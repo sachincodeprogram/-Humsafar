@@ -11,6 +11,8 @@ const listenerSchema = new mongoose.Schema(
     totalCalls: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
     fcmToken: { type: String, default: null },
+    // users jinhe is listener ne block kiya hai — dobara match nahi honge
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );
